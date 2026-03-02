@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - My Private Memories{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+        <p class="lead">Welcome back, {{ current_user.username }}!</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">Total Memories</h6>
+                        <h2 class="mb-0">{{ total_memories }}</h2>
+                    </div>
+                    <i class="fas fa-database fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">Photos</h6>
+                        <h2 class="mb-0">{{ total_photos }}</h2>
+                    </div>
+                    <i class="fas fa-camera fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">Videos</h6>
+                        <h2 class="mb-0">{{ total_videos }}</h2>
+                    </div>
+                    <i class="fas fa-video fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">Favorites</h6>
+                        <h2 class="mb-0">{{ favorites }}</h2>
+                    </div>
+                    <i class="fas fa-star fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Memories -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clock"></i> Recent Memories</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_memories %}
+                <div class="row">
+                    {% for memory in recent_memories %}
+                    <div class="col-md-4 mb-3">
+                        <div class="memory-card">
+                            <a href="{{ url_for('view_memory', memory_id=memory.id) }}">
+                                {% if memory.thumbnail %}
+                                <img src="{{ url_for('static', filename='uploads/thumbnails/' + memory.thumbnail) }}" 
+                                     class="img-fluid rounded" alt="{{ memory.title }}">
+                                {% else %}
+                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                     style="height: 150px;">
+                                    <i class="fas fa-{{ 'video' if memory.file_type == 'video' else 'image' }} fa-3x"></i>
+                                </div>
+                                {% endif %}
+                            </a>
+                            <div class="mt-2">
+                                <h6 class="mb-0">{{ memory.title|truncate(20) }}</h6>
+                                <small class="text-muted">{{ memory.created_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-muted my-4">
+                    <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i><br>
+                    No memories yet. <a href="{{ url_for('upload') }}">Upload your first memory!</a>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('upload') }}" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload New Memory
+                    </a>
+                    <a href="{{ url_for('gallery') }}" class="btn btn-success">
+                        <i class="fas fa-images"></i> View Gallery
+                    </a>
+                    <button class="btn btn-info" onclick="createAlbum()">
+                        <i class="fas fa-folder-plus"></i> Create Album
+                    </button>
+                    <a href="{{ url_for('timeline') }}" class="btn btn-secondary">
+                        <i class="fas fa-clock"></i> View Timeline
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Albums -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-folder"></i> Recent Albums</h5>
+            </div>
+            <div class="card-body">
+                {% if albums %}
+                <div class="list-group">
+                    {% for album in albums %}
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-folder-open text-warning"></i>
+                                {{ album.name }}
+                            </div>
+                            <span class="badge bg-primary rounded-pill">
+                                {{ album.memories|length }}
+                            </span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No albums yet. Create one to organize your memories!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Progress Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Uploading...</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%"></div>
+                </div>
+                <p class="text-center mt-2" id="uploadStatus">Preparing upload...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function createAlbum() {
+    const name = prompt('Enter album name:');
+    if (name) {
+        fetch('/albums/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                description: '',
+                is_private: true
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error creating album');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
